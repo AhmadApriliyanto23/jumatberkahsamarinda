@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masjid Samarinda – Peta & Jumat Berkah</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Design Tokens ─── */
+    :root {
+      --green-deep:   #1a3a2a;
+      --green-mid:    #2d6a4f;
+      --green-light:  #52b788;
+      --gold:         #c9a84c;
+      --gold-light:   #f0d080;
+      --cream:        #faf6ee;
+      --cream-dark:   #ede8dc;
+      --text-dark:    #1c1c1c;
+      --text-mid:     #4a4a4a;
+      --text-soft:    #7a7a6a;
+      --shadow-sm:    0 2px 8px rgba(0,0,0,.12);
+      --shadow-md:    0 8px 32px rgba(0,0,0,.18);
+      --shadow-lg:    0 20px 60px rgba(0,0,0,.25);
+      --radius:       16px;
+      --radius-sm:    8px;
+    }
+
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--green-deep);
+      color: var(--text-dark);
+    }
+
+    /* ─── Layout ─── */
+    #app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+    }
+
+    /* ─── Header ─── */
+    header {
+      background: var(--green-deep);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgba(201,168,76,.25);
+      z-index: 1000;
+    }
+
+    .header-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border-radius: 50%;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .header-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--cream);
+      line-height: 1.1;
+    }
+    .header-text p {
+      font-size: .72rem;
+      color: var(--gold-light);
+      opacity: .8;
+      margin-top: 2px;
+      font-weight: 300;
+    }
+
+    .header-badge {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .badge {
+      background: rgba(201,168,76,.15);
+      border: 1px solid rgba(201,168,76,.4);
+      color: var(--gold-light);
+      font-size: .68rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: .04em;
+    }
+
+    /* ─── Map ─── */
+    #map {
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    /* ─── Leaflet popup override ─── */
+    .leaflet-popup-content-wrapper {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    .leaflet-popup-tip-container { display: none; }
+    .leaflet-popup-content { margin: 0 !important; width: auto !important; }
+    .leaflet-popup { bottom: 12px !important; }
+
+    /* ─── Popup Card ─── */
+    .popup-card {
+      width: min(340px, 92vw);
+      background: var(--cream);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      font-family: 'DM Sans', sans-serif;
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(10px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .popup-img-wrap {
+      position: relative;
+      height: 160px;
+      overflow: hidden;
+      background: var(--cream-dark);
+    }
+    .popup-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .popup-img-wrap .img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px;
+      background: linear-gradient(160deg, var(--green-mid), var(--green-deep));
+      color: rgba(255,255,255,.5);
+      font-size: .78rem;
+    }
+    .popup-img-wrap .img-placeholder span { font-size: 2.4rem; }
+
+    .jumat-badge {
+      position: absolute; top: 10px; right: 10px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .04em;
+      backdrop-filter: blur(8px);
+    }
+    .jumat-badge.yes {
+      background: rgba(44,100,60,.88);
+      color: #b8f0c4;
+      border: 1px solid rgba(180,255,180,.3);
+    }
+    .jumat-badge.no {
+      background: rgba(80,40,20,.82);
+      color: #f0c4a4;
+      border: 1px solid rgba(255,190,140,.3);
+    }
+
+    .popup-body {
+      padding: 16px 18px 18px;
+    }
+
+    .popup-body h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: var(--green-deep);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .popup-addr {
+      font-size: .72rem;
+      color: var(--text-soft);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .info-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--cream-dark);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+      margin-bottom: 12px;
+    }
+    .info-row-icon { font-size: 1.15rem; flex-shrink: 0; margin-top: 1px; }
+    .info-row-text { font-size: .78rem; color: var(--text-mid); line-height: 1.5; }
+    .info-row-text strong { color: var(--text-dark); display: block; font-size: .8rem; margin-bottom: 2px; }
+
+    .status-text-yes { color: #2d6a4f; font-weight: 600; }
+    .status-text-no  { color: #9a4a1a; font-weight: 600; }
+
+    .btn-maps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: .02em;
+      transition: filter .2s, transform .15s;
+    }
+    .btn-maps:hover  { filter: brightness(1.12); transform: translateY(-1px); }
+    .btn-maps:active { filter: brightness(.95); transform: translateY(0); }
+    .btn-maps svg { flex-shrink: 0; }
+
+    /* ─── Custom Marker ─── */
+    .mosque-marker {
+      width: 40px; height: 40px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(45deg);
+      border: 2px solid #fff;
+      box-shadow: 0 3px 12px rgba(0,0,0,.35);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .mosque-marker.has-jumat {
+      background: linear-gradient(135deg, #2d6a4f, #52b788);
+      box-shadow: 0 3px 14px rgba(45,106,79,.5);
+    }
+    .mosque-marker.no-jumat {
+      background: linear-gradient(135deg, #9a2a1a, #e05a3a);
+      box-shadow: 0 3px 14px rgba(154,42,26,.5);
+    }
+    .mosque-marker:hover { transform: rotate(45deg) scale(1.18); }
+    .mosque-marker.has-jumat:hover { box-shadow: 0 5px 20px rgba(45,106,79,.65); }
+    .mosque-marker.no-jumat:hover  { box-shadow: 0 5px 20px rgba(154,42,26,.65); }
+    .mosque-marker-inner {
+      transform: rotate(-45deg);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* ─── Leaflet Tooltip custom ─── */
+    .mosque-tooltip {
+      background: var(--green-deep) !important;
+      border: 1px solid rgba(201,168,76,.35) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3) !important;
+      padding: 7px 12px !important;
+      color: var(--cream) !important;
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: .75rem !important;
+      line-height: 1.4 !important;
+      white-space: nowrap !important;
+      pointer-events: none !important;
+    }
+    .mosque-tooltip::before { display: none !important; }
+    .tooltip-name { font-weight: 500; display: block; margin-bottom: 3px; }
+    .tooltip-jumat-yes { color: #7ee8a2; font-size: .68rem; }
+    .tooltip-jumat-no  { color: #f0a08a; font-size: .68rem; }
+
+    /* ─── Legend (desktop only) ─── */
+    .map-legend {
+      position: absolute;
+      bottom: 28px; left: 14px;
+      z-index: 800;
+      background: rgba(26,58,42,.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: var(--cream);
+      font-size: .72rem;
+      line-height: 1.8;
+      pointer-events: none;
+    }
+    .map-legend .leg-title {
+      font-family: 'Playfair Display', serif;
+      font-size: .82rem;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+    .leg-row { display: flex; align-items: center; gap: 7px; }
+    .leg-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .leg-dot.yes { background: #52b788; }
+    .leg-dot.no  { background: #e07b39; }
+
+    @media (max-width: 480px) {
+      .map-legend { display: none; }
+      header { padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="header-icon">🕌</div>
+    <div class="header-text">
+      <h1>Masjid Samarinda</h1>
+      <p>Peta Lokasi & Info Jumat Berkah</p>
+    </div>
+    <div class="header-badge">
+      <span class="badge" id="count-badge">Memuat…</span>
+    </div>
+  </header>
+
+  <div id="map"></div>
+</div>
+
+<!-- Legend overlay (rendered after map init) -->
+<div class="map-legend" id="legend" style="display:none">
+  <div class="leg-title">Keterangan</div>
+  <div class="leg-row"><span class="leg-dot yes"></span> Jumat Berkah tersedia</div>
+  <div class="leg-row"><span class="leg-dot no"></span> Tidak ada Jumat Berkah</div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════
+   DATA  — nantinya diganti dengan API call
+   ══════════════════════════════════════════════ */
+const MOSQUE_DATA = [
+  {
+    id: "masjid_001",
+    name: "Masjid Baitul Muttaqien – Islamic Center Kaltim",
+    address: "Jl. Slamet Riyadi No.1, Mugirejo, Kec. Sungai Pinang, Kota Samarinda, Kalimantan Timur 75129",
+    lat: -0.5023346556441342,
+    lng: 117.12009252622154,
+    jumat_berkah: true,
+    jumat_berkah_time: "11:30 – habis salat Jumat",
+    jumat_berkah_note: "Nasi kotak & lauk gratis untuk jamaah dan masyarakat sekitar",
+    photo_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Islamic_Center_Kalimantan_Timur.jpg/640px-Islamic_Center_Kalimantan_Timur.jpg",
+    gmaps_url: "https://maps.google.com/?q=-0.5023346556441342,117.12009252622154",
+    apple_maps_url: "https://maps.apple.com/?ll=-0.5023346556441342,117.12009252622154&q=Masjid+Baitul+Muttaqien+-+Islamic+Center+Kaltim"
+  },
+  {
+    id: "masjid_002",
+    name: "Masjid Raya Darussalam",
+    address: "Jl. Pramuka No.17, Sidodadi, Kec. Samarinda Ulu, Kota Samarinda, Kalimantan Timur 75122",
+    lat: -0.5032466442299814,
+    lng:  117.14746652195846,
+    jumat_berkah: false,
+    jumat_berkah_time: null,
+    jumat_berkah_note: "Saat ini belum menyelenggarakan program Jumat Berkah",
+    photo_url: "",   /* kosong = tampilkan placeholder */
+    gmaps_url: "https://maps.google.com/?q=-0.5032466442299814,117.14746652195846",
+    apple_maps_url: "https://maps.apple.com/?ll=-0.5032466442299814,117.14746652195846&q=Masjid+Raya+Darussalam+Samarinda"
+  },
+  {
+    id: "masjid_003",
+    name: "Masjid Baburrahmah",
+    address: "perumahan griya mukti sejatera, Jl. PM. Noor, Sempaja Sel., Kec. Samarinda Utara, Kota Samarinda, Kalimantan Timur 75242",
+    lat: -0.45215961,
+    lng: 117.1719176,
+    jumat_berkah: true,
+    jumat_berkah_time: "11:30 – habis salat Jumat",
+    jumat_berkah_note: "Nasi kotak & lauk gratis untuk jamaah dan masyarakat sekitar",
+    photo_url: "",   /* kosong = tampilkan placeholder */
+    gmaps_url: "https://maps.google.com/?q=-0.45215961,117.1719176",
+    apple_maps_url: "https://maps.apple.com/?ll=-0.45215961,117.1719176&q=Masjid+Baburrahmah"
+  }
+];
+
+/* ══════════════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════════════ */
+function isMobile () {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios'
+       : /Android/i.test(navigator.userAgent)           ? 'android'
+       : 'desktop';
+}
+
+function getMapsUrl (mosque) {
+  const platform = isMobile();
+  if (platform === 'ios') return mosque.apple_maps_url;
+  return mosque.gmaps_url;          /* android & desktop → Google Maps */
+}
+
+function buildPhotoMarkup (mosque) {
+  if (mosque.photo_url) {
+    return `<img src="${mosque.photo_url}" alt="${mosque.name}"
+                 loading="lazy"
+                 onerror="this.parentElement.innerHTML=\`<div class='img-placeholder'><span>🕌</span><small>Foto tidak tersedia</small></div>\`" />`;
+  }
+  return `<div class="img-placeholder"><span>🕌</span><small>Foto belum tersedia</small></div>`;
+}
+
+/* ══════════════════════════════════════════════
+   MAP INIT
+   ══════════════════════════════════════════════ */
+
+/* Batas wilayah Samarinda — user tidak bisa zoom/pan keluar area ini */
+const SAMARINDA_BOUNDS = L.latLngBounds(
+  L.latLng(-0.6200, 116.9800),  /* South-West */
+  L.latLng(-0.3200, 117.3200)   /* North-East */
+);
+
+const map = L.map('map', {
+  center: [-0.4820, 117.1490],
+  zoom: 14,
+  minZoom: 12,
+  maxZoom: 19,
+  zoomControl: false,
+  attributionControl: true,
+  maxBounds: SAMARINDA_BOUNDS,
+  maxBoundsViscosity: 1.0   /* 1.0 = solid wall, tidak bisa drag keluar */
+});
+
+/* Add zoom control bottom-right */
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+/* Tile layer — OpenStreetMap */
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+/* ══════════════════════════════════════════════
+   RENDER MARKERS FROM DATA
+   ══════════════════════════════════════════════ */
+function buildPopupHTML (mosque) {
+  const hasJumat  = mosque.jumat_berkah;
+  const badgeHTML = hasJumat
+    ? `<span class="jumat-badge yes">✅ Jumat Berkah</span>`
+    : `<span class="jumat-badge no">🚫 Tidak Ada</span>`;
+
+  const jumatInfoHTML = hasJumat
+    ? `<span class="status-text-yes">✅ Ada – ${mosque.jumat_berkah_time}</span><br>${mosque.jumat_berkah_note}`
+    : `<span class="status-text-no">🚫 Tidak Ada</span><br>${mosque.jumat_berkah_note}`;
+
+  const mapsLabel  = isMobile() === 'ios' ? 'Buka di Apple Maps' : 'Buka di Google Maps';
+  const mapsUrl    = getMapsUrl(mosque);
+
+  return `
+    <div class="popup-card">
+      <div class="popup-img-wrap">
+        ${buildPhotoMarkup(mosque)}
+        ${badgeHTML}
+      </div>
+      <div class="popup-body">
+        <h2>${mosque.name}</h2>
+        <p class="popup-addr">📍 ${mosque.address}</p>
+        <div class="info-row">
+          <span class="info-row-icon">🍱</span>
+          <div class="info-row-text">
+            <strong>Jumat Berkah</strong>
+            ${jumatInfoHTML}
+          </div>
+        </div>
+        <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-maps">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          ${mapsLabel}
+        </a>
+      </div>
+    </div>`;
+}
+
+function createMosqueIcon (hasJumat) {
+  const colorClass = hasJumat ? 'has-jumat' : 'no-jumat';
+  return L.divIcon({
+    className: '',
+    html: `<div class="mosque-marker ${colorClass}"><div class="mosque-marker-inner">🕌</div></div>`,
+    iconSize:   [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor:[0, -44]
+  });
+}
+
+/* ─── Fix: bindPopup dilakukan saat marker dibuat (bukan di dalam event click).
+         Ini menghindari race condition Leaflet di mana memanggil bindPopup()
+         di dalam handler 'click' mengacaukan state internal toggle popup
+         pada klik kedua dan seterusnya.
+         Content HTML tetap di-build sekali saja (lazy) via 'popupopen' event. ─── */
+MOSQUE_DATA.forEach(mosque => {
+  const marker = L.marker([mosque.lat, mosque.lng], { icon: createMosqueIcon(mosque.jumat_berkah) }).addTo(map);
+
+  /* Tooltip hover — nama masjid + status jumat berkah */
+  const tooltipJumat = mosque.jumat_berkah
+    ? `<span class="tooltip-jumat-yes">✅ Ada Jumat Berkah</span>`
+    : `<span class="tooltip-jumat-no">🚫 Tidak Ada Jumat Berkah</span>`;
+
+  marker.bindTooltip(
+    `<span class="tooltip-name">${mosque.name}</span>${tooltipJumat}`,
+    {
+      direction:  'top',
+      offset:     [0, -44],
+      opacity:    1,
+      className:  'mosque-tooltip',
+      permanent:  false
+    }
+  );
+
+  /* Bind popup dengan content kosong dulu — agar Leaflet tahu marker ini punya popup */
+  marker.bindPopup('', {
+    maxWidth: 360,
+    closeButton: true,
+    className: 'mosque-popup'
+  });
+
+  /* Isi content HTML hanya sekali, saat popup pertama kali akan dibuka */
+  marker.on('popupopen', function () {
+    const popup = this.getPopup();
+    if (!popup._contentBuilt) {
+      popup.setContent(buildPopupHTML(mosque));
+      popup._contentBuilt = true;
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════
+   UI UPDATES
+   ══════════════════════════════════════════════ */
+document.getElementById('count-badge').textContent = `${MOSQUE_DATA.length} Masjid`;
+
+/* Show legend after map ready */
+map.whenReady(() => {
+  const legend = document.getElementById('legend');
+  legend.style.display = 'block';
+  /* Position it over the map container */
+  const mapEl = document.getElementById('map');
+  mapEl.style.position = 'relative';
+  mapEl.appendChild(legend);
+});
+</script>
+</body>
+</html>
