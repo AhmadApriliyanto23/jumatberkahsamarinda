@@ -3,345 +3,353 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Masjid Samarinda – Peta & Jumat Berkah</title>
-
-  <!-- Leaflet CSS -->
+  <title>Masjid Jumat Berkah – Peta Interaktif</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    /* ─── Design Tokens ─── */
+    /* ══ TOKENS ══ */
     :root {
-      --green-deep:   #1a3a2a;
-      --green-mid:    #2d6a4f;
-      --green-light:  #52b788;
-      --gold:         #c9a84c;
-      --gold-light:   #f0d080;
-      --cream:        #faf6ee;
-      --cream-dark:   #ede8dc;
-      --text-dark:    #1c1c1c;
-      --text-mid:     #4a4a4a;
-      --text-soft:    #7a7a6a;
-      --shadow-sm:    0 2px 8px rgba(0,0,0,.12);
-      --shadow-md:    0 8px 32px rgba(0,0,0,.18);
-      --shadow-lg:    0 20px 60px rgba(0,0,0,.25);
-      --radius:       16px;
-      --radius-sm:    8px;
+      --g-deep:   #1a3a2a;
+      --g-mid:    #2d6a4f;
+      --g-light:  #52b788;
+      --gold:     #c9a84c;
+      --gold-lt:  #f0d080;
+      --cream:    #faf6ee;
+      --cream-dk: #ede8dc;
+      --txt:      #1c1c1c;
+      --txt-mid:  #4a4a4a;
+      --txt-soft: #7a7a6a;
+      --r:        12px;
+      --r-sm:     7px;
+      --sh-md:    0 6px 24px rgba(0,0,0,.16);
     }
-
-    /* ─── Reset ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--g-deep); color: var(--txt); }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--green-deep);
-      color: var(--text-dark);
-    }
+    /* ══ APP SHELL ══ */
+    #app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; }
 
-    /* ─── Layout ─── */
-    #app {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      height: 100vh;
-    }
-
-    /* ─── Header ─── */
+    /* ══ HEADER ══ */
     header {
-      background: var(--green-deep);
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      border-bottom: 1px solid rgba(201,168,76,.25);
-      z-index: 1000;
+      background: var(--g-deep);
+      border-bottom: 1px solid rgba(201,168,76,.2);
+      padding: 0 16px;
+      display: flex; align-items: center; gap: 10px;
+      z-index: 1200;
     }
+    .h-icon {
+      width: 34px; height: 34px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+      border-radius: 50%; display: grid; place-items: center; font-size: 16px;
+    }
+    .h-text { line-height: 1; }
+    .h-title { font-family: 'Playfair Display', serif; font-size: clamp(.88rem,2vw,1.05rem); color: var(--cream); }
+    .h-sub   { font-size: .62rem; color: var(--gold-lt); opacity: .78; font-weight: 300; margin-top: 2px; }
+    .h-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
-    .header-icon {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-light));
-      border-radius: 50%;
-      display: grid; place-items: center;
-      flex-shrink: 0;
-      font-size: 20px;
-    }
-
-    .header-text h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1rem, 2.5vw, 1.3rem);
-      color: var(--cream);
-      line-height: 1.1;
-    }
-    .header-text p {
-      font-size: .72rem;
-      color: var(--gold-light);
-      opacity: .8;
-      margin-top: 2px;
-      font-weight: 300;
-    }
-
-    .header-badge {
-      margin-left: auto;
-      display: flex; align-items: center; gap: 8px;
-    }
     .badge {
-      background: rgba(201,168,76,.15);
-      border: 1px solid rgba(201,168,76,.4);
-      color: var(--gold-light);
-      font-size: .68rem;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 20px;
-      letter-spacing: .04em;
+      background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.32);
+      color: var(--gold-lt); font-size: .64rem; font-weight: 500;
+      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    }
+    .btn-geo {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border-radius: 20px; border: none; cursor: pointer;
+      background: rgba(82,183,136,.14); border: 1px solid rgba(82,183,136,.38);
+      color: #7ee8b2; font-family: 'DM Sans', sans-serif; font-size: .66rem; font-weight: 500;
+      transition: background .2s, transform .15s; white-space: nowrap;
+    }
+    .btn-geo:hover { background: rgba(82,183,136,.26); transform: translateY(-1px); }
+    .btn-geo:disabled { opacity: .5; pointer-events: none; }
+    .btn-geo svg { flex-shrink: 0; }
+
+    /* ══ TOAST ══ */
+    #toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px);
+      background: var(--g-deep); color: var(--cream); border: 1px solid rgba(201,168,76,.28);
+      padding: 9px 18px; border-radius: 20px; font-size: .75rem;
+      box-shadow: var(--sh-md); z-index: 9999; transition: transform .3s, opacity .3s; opacity: 0;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ══ BODY GRID — 9:3 ══ */
+    #body-grid {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      overflow: hidden; min-height: 0;
     }
 
-    /* ─── Map ─── */
-    #map {
-      width: 100%; height: 100%;
-      z-index: 1;
-    }
+    /* ══ MAP PANE ══ */
+    #map-pane { position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; z-index: 1; }
 
-    /* ─── Leaflet popup override ─── */
-    .leaflet-popup-content-wrapper {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-    }
-    .leaflet-popup-tip-container { display: none; }
-    .leaflet-popup-content { margin: 0 !important; width: auto !important; }
-    .leaflet-popup { bottom: 12px !important; }
-
-    /* ─── Popup Card ─── */
-    .popup-card {
-      width: min(340px, 92vw);
-      background: var(--cream);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-lg);
-      font-family: 'DM Sans', sans-serif;
-      animation: popIn .25s cubic-bezier(.34,1.56,.64,1) both;
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: translateY(10px) scale(.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .popup-img-wrap {
-      position: relative;
-      height: 160px;
-      overflow: hidden;
-      background: var(--cream-dark);
-    }
-    .popup-img-wrap img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .popup-img-wrap .img-placeholder {
-      width: 100%; height: 100%;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 8px;
-      background: linear-gradient(160deg, var(--green-mid), var(--green-deep));
-      color: rgba(255,255,255,.5);
-      font-size: .78rem;
-    }
-    .popup-img-wrap .img-placeholder span { font-size: 2.4rem; }
-
-    .jumat-badge {
-      position: absolute; top: 10px; right: 10px;
-      padding: 5px 11px;
-      border-radius: 20px;
-      font-size: .68rem; font-weight: 600;
-      letter-spacing: .04em;
-      backdrop-filter: blur(8px);
-    }
-    .jumat-badge.yes {
-      background: rgba(44,100,60,.88);
-      color: #b8f0c4;
-      border: 1px solid rgba(180,255,180,.3);
-    }
-    .jumat-badge.no {
-      background: rgba(80,40,20,.82);
-      color: #f0c4a4;
-      border: 1px solid rgba(255,190,140,.3);
-    }
-
-    .popup-body {
-      padding: 16px 18px 18px;
-    }
-
-    .popup-body h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.05rem;
-      color: var(--green-deep);
-      line-height: 1.3;
-      margin-bottom: 4px;
-    }
-
-    .popup-addr {
-      font-size: .72rem;
-      color: var(--text-soft);
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
-
-    .info-row {
-      display: flex; align-items: flex-start; gap: 10px;
-      background: var(--cream-dark);
-      border-radius: var(--radius-sm);
-      padding: 11px 13px;
-      margin-bottom: 12px;
-    }
-    .info-row-icon { font-size: 1.15rem; flex-shrink: 0; margin-top: 1px; }
-    .info-row-text { font-size: .78rem; color: var(--text-mid); line-height: 1.5; }
-    .info-row-text strong { color: var(--text-dark); display: block; font-size: .8rem; margin-bottom: 2px; }
-
-    .status-text-yes { color: #2d6a4f; font-weight: 600; }
-    .status-text-no  { color: #9a4a1a; font-weight: 600; }
-
-    .btn-maps {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
-      color: #fff !important;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .82rem;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      letter-spacing: .02em;
-      transition: filter .2s, transform .15s;
-    }
-    .btn-maps:hover  { filter: brightness(1.12); transform: translateY(-1px); }
-    .btn-maps:active { filter: brightness(.95); transform: translateY(0); }
-    .btn-maps svg { flex-shrink: 0; }
-
-    /* ─── Custom Marker ─── */
-    .mosque-marker {
-      width: 40px; height: 40px;
-      border-radius: 50% 50% 50% 4px;
-      transform: rotate(45deg);
-      border: 2px solid #fff;
-      box-shadow: 0 3px 12px rgba(0,0,0,.35);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: transform .2s, box-shadow .2s;
-    }
-    .mosque-marker.has-jumat {
-      background: linear-gradient(135deg, #2d6a4f, #52b788);
-      box-shadow: 0 3px 14px rgba(45,106,79,.5);
-    }
-    .mosque-marker.no-jumat {
-      background: linear-gradient(135deg, #9a2a1a, #e05a3a);
-      box-shadow: 0 3px 14px rgba(154,42,26,.5);
-    }
-    .mosque-marker:hover { transform: rotate(45deg) scale(1.18); }
-    .mosque-marker.has-jumat:hover { box-shadow: 0 5px 20px rgba(45,106,79,.65); }
-    .mosque-marker.no-jumat:hover  { box-shadow: 0 5px 20px rgba(154,42,26,.65); }
-    .mosque-marker-inner {
-      transform: rotate(-45deg);
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    /* ─── Leaflet Tooltip custom ─── */
-    .mosque-tooltip {
-      background: var(--green-deep) !important;
-      border: 1px solid rgba(201,168,76,.35) !important;
-      border-radius: 8px !important;
-      box-shadow: 0 4px 16px rgba(0,0,0,.3) !important;
-      padding: 7px 12px !important;
-      color: var(--cream) !important;
-      font-family: 'DM Sans', sans-serif !important;
-      font-size: .75rem !important;
-      line-height: 1.4 !important;
-      white-space: nowrap !important;
-      pointer-events: none !important;
-    }
-    .mosque-tooltip::before { display: none !important; }
-    .tooltip-name { font-weight: 500; display: block; margin-bottom: 3px; }
-    .tooltip-jumat-yes { color: #7ee8a2; font-size: .68rem; }
-    .tooltip-jumat-no  { color: #f0a08a; font-size: .68rem; }
-
-    /* ─── Legend (desktop only) ─── */
     .map-legend {
-      position: absolute;
-      bottom: 28px; left: 14px;
-      z-index: 800;
-      background: rgba(26,58,42,.92);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(201,168,76,.25);
-      border-radius: var(--radius-sm);
-      padding: 12px 16px;
-      color: var(--cream);
-      font-size: .72rem;
-      line-height: 1.8;
+      position: absolute; bottom: 40px; left: 10px; z-index: 800;
+      background: rgba(26,58,42,.92); backdrop-filter: blur(10px);
+      border: 1px solid rgba(201,168,76,.22); border-radius: var(--r-sm);
+      padding: 9px 13px; color: var(--cream); font-size: .65rem; line-height: 1.9;
       pointer-events: none;
     }
-    .map-legend .leg-title {
-      font-family: 'Playfair Display', serif;
-      font-size: .82rem;
-      color: var(--gold-light);
-      margin-bottom: 6px;
-    }
-    .leg-row { display: flex; align-items: center; gap: 7px; }
-    .leg-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .leg-dot.yes { background: #52b788; }
-    .leg-dot.no  { background: #e07b39; }
+    .leg-title { font-family:'Playfair Display',serif; font-size:.72rem; color:var(--gold-lt); margin-bottom:4px; }
+    .leg-row   { display:flex; align-items:center; gap:6px; }
+    .leg-dot   { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .leg-dot.y { background:#52b788; }
+    .leg-dot.n { background:#e05a3a; }
 
-    @media (max-width: 480px) {
+    /* ══ SIDEBAR ══ */
+    #sidebar {
+      background: var(--cream); border-left: 1px solid rgba(0,0,0,.07);
+      display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+      z-index: 100;
+    }
+
+    .search-wrap {
+      padding: 10px 10px 6px; border-bottom: 1px solid var(--cream-dk);
+      background: var(--cream); flex-shrink: 0;
+    }
+    .search-box {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff; border: 1.5px solid var(--cream-dk);
+      border-radius: 20px; padding: 6px 11px; transition: border-color .2s;
+    }
+    .search-box:focus-within { border-color: var(--g-light); }
+    .search-box svg { flex-shrink: 0; color: var(--txt-soft); }
+    .search-box input {
+      border: none; outline: none; background: transparent;
+      font-family: 'DM Sans', sans-serif; font-size: .75rem; color: var(--txt); width: 100%;
+    }
+    .search-box input::placeholder { color: var(--txt-soft); }
+    .search-count { font-size: .62rem; color: var(--txt-soft); margin-top: 5px; padding: 0 2px; }
+
+    #mosque-list {
+      overflow-y: auto; flex: 1; padding: 8px;
+      display: flex; flex-direction: column; gap: 7px;
+      scrollbar-width: thin; scrollbar-color: var(--cream-dk) transparent;
+      min-height: 0;
+    }
+    #mosque-list::-webkit-scrollbar { width: 3px; }
+    #mosque-list::-webkit-scrollbar-thumb { background: var(--cream-dk); border-radius: 3px; }
+
+    /* ══ MOSQUE CARD (sidebar) ══ */
+    .mosque-card {
+      background: #fff; border: 1.5px solid var(--cream-dk); border-radius: var(--r);
+      overflow: hidden; cursor: pointer;
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+    }
+    .mosque-card:hover { border-color: var(--g-light); box-shadow: 0 3px 12px rgba(45,106,79,.14); transform: translateY(-1px); }
+    .mosque-card.active { border-color: var(--g-mid); box-shadow: 0 3px 16px rgba(45,106,79,.22); }
+
+    .mc-img { height: 82px; position: relative; overflow: hidden; background: var(--cream-dk); }
+    .mc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mc-ph {
+      width:100%; height:100%; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:3px;
+      background:linear-gradient(160deg,var(--g-mid),var(--g-deep));
+      color:rgba(255,255,255,.4); font-size:.6rem;
+    }
+    .mc-ph span { font-size:1.5rem; }
+    .mc-tag {
+      position:absolute; top:6px; right:6px;
+      padding:2px 7px; border-radius:20px;
+      font-size:.55rem; font-weight:600; backdrop-filter:blur(8px);
+    }
+    .mc-tag.yes { background:rgba(30,80,50,.85); color:#9eefba; border:1px solid rgba(160,255,180,.22); }
+    .mc-tag.no  { background:rgba(80,30,15,.85); color:#f0b898; border:1px solid rgba(255,170,120,.22); }
+    .mc-body { padding: 8px 9px 9px; }
+    .mc-name {
+      font-family:'Playfair Display',serif; font-size:.75rem; color:var(--g-deep);
+      line-height:1.3; margin-bottom:2px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .mc-addr {
+      font-size:.6rem; color:var(--txt-soft); line-height:1.4; margin-bottom:7px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .mc-btn-row { display:flex; gap:5px; }
+    .mc-btn {
+      flex:1; display:flex; align-items:center; justify-content:center; gap:4px;
+      padding:5px 4px; border:none; border-radius:var(--r-sm);
+      font-family:'DM Sans',sans-serif; font-size:.62rem; font-weight:500;
+      cursor:pointer; text-decoration:none; transition:filter .2s, transform .15s;
+    }
+    .mc-btn-loc { background:linear-gradient(135deg,var(--g-mid),var(--g-deep)); color:#fff; }
+    .mc-btn-loc:hover { filter:brightness(1.14); transform:translateY(-1px); }
+
+    .no-results { text-align:center; padding:28px 12px; color:var(--txt-soft); font-size:.76rem; }
+    .no-results span { font-size:1.8rem; display:block; margin-bottom:7px; }
+
+    /* ══ POPUP ══ */
+    .leaflet-popup-content-wrapper {
+      background:transparent !important; border:none !important;
+      box-shadow:none !important; padding:0 !important; border-radius:0 !important;
+    }
+    .leaflet-popup-tip-container { display:none; }
+    .leaflet-popup-content { margin:0 !important; width:auto !important; }
+
+    .popup-card {
+      width: min(265px, 86vw);
+      background: var(--cream); border-radius: var(--r);
+      overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.22);
+      animation: popIn .22s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn { from{opacity:0;transform:translateY(8px) scale(.96)} to{opacity:1;transform:none} }
+
+    .pc-img { height: 118px; position:relative; overflow:hidden; background:var(--cream-dk); }
+    .pc-img img { width:100%; height:100%; object-fit:cover; display:block; }
+    .pc-img-ph {
+      width:100%; height:100%; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:5px;
+      background:linear-gradient(160deg,var(--g-mid),var(--g-deep));
+      color:rgba(255,255,255,.45); font-size:.7rem;
+    }
+    .pc-img-ph span { font-size:2rem; }
+    .pc-badge {
+      position:absolute; top:8px; right:8px;
+      padding:3px 9px; border-radius:20px;
+      font-size:.58rem; font-weight:600; backdrop-filter:blur(8px);
+    }
+    .pc-badge.yes { background:rgba(30,80,50,.88); color:#b2f5cc; border:1px solid rgba(160,255,180,.28); }
+    .pc-badge.no  { background:rgba(80,30,15,.88); color:#f5bda0; border:1px solid rgba(255,170,120,.28); }
+
+    .pc-body { padding:11px 12px 12px; }
+    .pc-body h2 {
+      font-family:'Playfair Display',serif; font-size:.85rem; color:var(--g-deep);
+      line-height:1.3; margin-bottom:3px;
+    }
+    .pc-addr { font-size:.63rem; color:var(--txt-soft); margin-bottom:8px; line-height:1.4; }
+
+    .pc-info {
+      display:flex; gap:7px; align-items:flex-start;
+      background:var(--cream-dk); border-radius:var(--r-sm);
+      padding:7px 9px; margin-bottom:9px;
+    }
+    .pc-info-icon { font-size:.95rem; flex-shrink:0; margin-top:1px; }
+    .pc-info-text { font-size:.65rem; color:var(--txt-mid); line-height:1.5; }
+    .pc-info-text strong { display:block; font-size:.67rem; color:var(--txt); margin-bottom:2px; }
+    .st-yes { color:#2d6a4f; font-weight:600; }
+    .st-no  { color:#9a2a1a; font-weight:600; }
+
+    .pc-btn-row { display:flex; gap:5px; }
+    .pc-btn {
+      flex:1; display:flex; align-items:center; justify-content:center; gap:4px;
+      padding:7px 4px; border:none; border-radius:var(--r-sm);
+      font-family:'DM Sans',sans-serif; font-size:.64rem; font-weight:500;
+      cursor:pointer; text-decoration:none; transition:filter .2s, transform .15s;
+    }
+    .pc-btn-maps   { background:linear-gradient(135deg,var(--g-mid),var(--g-deep)); color:#fff !important; }
+    .pc-btn-maps:hover { filter:brightness(1.13); transform:translateY(-1px); }
+    .pc-btn-donate { background:linear-gradient(135deg,#b5451b,#e07848); color:#fff; }
+    .pc-btn-donate:hover { filter:brightness(1.13); transform:translateY(-1px); }
+    .pc-btn-donate-dis { background:var(--cream-dk); color:var(--txt-soft); cursor:default; pointer-events:none; }
+
+    /* ══ MARKERS ══ */
+    .mosque-marker {
+      width:36px; height:36px; border-radius:50% 50% 50% 4px;
+      transform:rotate(45deg); border:2px solid #fff;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:transform .2s, box-shadow .2s;
+    }
+    .mosque-marker.has-jumat { background:linear-gradient(135deg,#2d6a4f,#52b788); box-shadow:0 3px 12px rgba(45,106,79,.48); }
+    .mosque-marker.no-jumat  { background:linear-gradient(135deg,#9a2a1a,#e05a3a); box-shadow:0 3px 12px rgba(154,42,26,.48); }
+    .mosque-marker:hover { transform:rotate(45deg) scale(1.18); }
+    .mosque-marker.has-jumat:hover { box-shadow:0 5px 18px rgba(45,106,79,.65); }
+    .mosque-marker.no-jumat:hover  { box-shadow:0 5px 18px rgba(154,42,26,.65); }
+    .mosque-marker-inner { transform:rotate(-45deg); font-size:16px; line-height:1; }
+
+    /* ══ TOOLTIP ══ */
+    .mosque-tooltip {
+      background:var(--g-deep) !important; border:1px solid rgba(201,168,76,.32) !important;
+      border-radius:8px !important; box-shadow:0 4px 14px rgba(0,0,0,.28) !important;
+      padding:6px 11px !important; color:var(--cream) !important;
+      font-family:'DM Sans',sans-serif !important; font-size:.7rem !important;
+      line-height:1.45 !important; white-space:nowrap !important; pointer-events:none !important;
+    }
+    .mosque-tooltip::before { display:none !important; }
+    .tt-name { font-weight:500; display:block; margin-bottom:2px; }
+    .tt-yes  { color:#7ee8a2; font-size:.63rem; }
+    .tt-no   { color:#f0a08a; font-size:.63rem; }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 768px) {
+      #body-grid { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+      #sidebar { max-height: 40vh; border-left: none; border-top: 2px solid rgba(201,168,76,.18); }
+      #mosque-list { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 6px 8px; }
+      .mosque-card { min-width: 175px; flex-shrink: 0; }
       .map-legend { display: none; }
-      header { padding: 10px 14px; }
+    }
+    @media (max-width: 480px) {
+      header { padding: 0 10px; gap: 8px; }
+      .h-sub, .badge { display: none; }
+      .btn-geo span { display: none; }
+      .btn-geo { padding: 6px 8px; }
     }
   </style>
 </head>
 <body>
-
 <div id="app">
+
+  <!-- HEADER -->
   <header>
-    <div class="header-icon">🕌</div>
-    <div class="header-text">
-      <h1>Masjid Samarinda</h1>
-      <p>Peta Lokasi & Info Jumat Berkah</p>
+    <div class="h-icon">🕌</div>
+    <div class="h-text">
+      <div class="h-title">Masjid &amp; Jumat Berkah</div>
+      <div class="h-sub">Peta Interaktif Masjid Indonesia</div>
     </div>
-    <div class="header-badge">
-      <span class="badge" id="count-badge">Memuat…</span>
+    <div class="h-right">
+      <span class="badge" id="count-badge">—</span>
+      <button class="btn-geo" id="btn-geo" onclick="locateUser()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+          <circle cx="12" cy="12" r="8" opacity=".25"/>
+        </svg>
+        <span>Lokasi Saya</span>
+      </button>
     </div>
   </header>
 
-  <div id="map"></div>
+  <!-- BODY GRID (9:3) -->
+  <div id="body-grid">
+
+    <!-- GRID 9: MAP -->
+    <div id="map-pane">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="leg-title">Keterangan</div>
+        <div class="leg-row"><span class="leg-dot y"></span> Ada Jumat Berkah</div>
+        <div class="leg-row"><span class="leg-dot n"></span> Tidak Ada Jumat Berkah</div>
+      </div>
+    </div>
+
+    <!-- GRID 3: SIDEBAR -->
+    <div id="sidebar">
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="Cari nama masjid…"
+                 oninput="filterMosques(this.value)" autocomplete="off" />
+        </div>
+        <div class="search-count" id="search-count"></div>
+      </div>
+      <div id="mosque-list"></div>
+    </div>
+
+  </div>
 </div>
 
-<!-- Legend overlay (rendered after map init) -->
-<div class="map-legend" id="legend" style="display:none">
-  <div class="leg-title">Keterangan</div>
-  <div class="leg-row"><span class="leg-dot yes"></span> Jumat Berkah tersedia</div>
-  <div class="leg-row"><span class="leg-dot no"></span> Tidak ada Jumat Berkah</div>
-</div>
+<!-- Toast notification -->
+<div id="toast"></div>
 
-<!-- Leaflet JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-
 <script>
-/* ══════════════════════════════════════════════
-   DATA  — nantinya diganti dengan API call
-   ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   DATA — ganti dengan fetch() ke API saat production
+   ══════════════════════════════════════════════════ */
 const MOSQUE_DATA = [
   {
     id: "masjid_001",
@@ -384,168 +392,251 @@ const MOSQUE_DATA = [
   }
 ];
 
-/* ══════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    UTILS
-   ══════════════════════════════════════════════ */
-function isMobile () {
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios'
-       : /Android/i.test(navigator.userAgent)           ? 'android'
-       : 'desktop';
-}
+   ══════════════════════════════════════════════════ */
+const platform = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios'
+               : /Android/i.test(navigator.userAgent)           ? 'android'
+               : 'desktop';
 
-function getMapsUrl (mosque) {
-  const platform = isMobile();
-  if (platform === 'ios') return mosque.apple_maps_url;
-  return mosque.gmaps_url;          /* android & desktop → Google Maps */
-}
+const getMapsUrl = m => platform === 'ios' ? m.apple_maps_url : m.gmaps_url;
 
-function buildPhotoMarkup (mosque) {
-  if (mosque.photo_url) {
-    return `<img src="${mosque.photo_url}" alt="${mosque.name}"
-                 loading="lazy"
-                 onerror="this.parentElement.innerHTML=\`<div class='img-placeholder'><span>🕌</span><small>Foto tidak tersedia</small></div>\`" />`;
+function photoMarkup(m, phClass) {
+  if (m.photo_url) {
+    return `<img src="${m.photo_url}" alt="${m.name}" loading="lazy"
+      onerror="this.parentElement.innerHTML='<div class=\\'${phClass}\\'><span>🕌</span><small>Foto tidak tersedia</small></div>'" />`;
   }
-  return `<div class="img-placeholder"><span>🕌</span><small>Foto belum tersedia</small></div>`;
+  return `<div class="${phClass}"><span>🕌</span><small>Foto belum tersedia</small></div>`;
 }
 
-/* ══════════════════════════════════════════════
-   MAP INIT
-   ══════════════════════════════════════════════ */
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
 
-/* Batas wilayah Samarinda — user tidak bisa zoom/pan keluar area ini */
-const SAMARINDA_BOUNDS = L.latLngBounds(
-  L.latLng(-0.6200, 116.9800),  /* South-West */
-  L.latLng(-0.3200, 117.3200)   /* North-East */
-);
-
+/* ══════════════════════════════════════════════════
+   MAP
+   ══════════════════════════════════════════════════ */
 const map = L.map('map', {
   center: [-0.4820, 117.1490],
-  zoom: 14,
-  minZoom: 12,
-  maxZoom: 19,
-  zoomControl: false,
-  attributionControl: true,
-  maxBounds: SAMARINDA_BOUNDS,
-  maxBoundsViscosity: 1.0   /* 1.0 = solid wall, tidak bisa drag keluar */
+  zoom: 14, minZoom: 3, maxZoom: 19,
+  zoomControl: false, attributionControl: true
 });
-
-/* Add zoom control bottom-right */
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-/* Tile layer — OpenStreetMap */
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-/* ══════════════════════════════════════════════
-   RENDER MARKERS FROM DATA
-   ══════════════════════════════════════════════ */
-function buildPopupHTML (mosque) {
-  const hasJumat  = mosque.jumat_berkah;
-  const badgeHTML = hasJumat
-    ? `<span class="jumat-badge yes">✅ Jumat Berkah</span>`
-    : `<span class="jumat-badge no">🚫 Tidak Ada</span>`;
+/* ══════════════════════════════════════════════════
+   POPUP HTML
+   ══════════════════════════════════════════════════ */
+function buildPopupHTML(m) {
+  const hasJ = m.jumat_berkah;
+  const jumatInfo = hasJ
+    ? `<span class="st-yes">✅ Ada – ${m.jumat_berkah_time}</span><br><small>${m.jumat_berkah_note}</small>`
+    : `<span class="st-no">🚫 Tidak Ada</span><br><small>${m.jumat_berkah_note}</small>`;
 
-  const jumatInfoHTML = hasJumat
-    ? `<span class="status-text-yes">✅ Ada – ${mosque.jumat_berkah_time}</span><br>${mosque.jumat_berkah_note}`
-    : `<span class="status-text-no">🚫 Tidak Ada</span><br>${mosque.jumat_berkah_note}`;
+  const mapsLbl = platform === 'ios' ? 'Apple Maps' : 'Google Maps';
 
-  const mapsLabel  = isMobile() === 'ios' ? 'Buka di Apple Maps' : 'Buka di Google Maps';
-  const mapsUrl    = getMapsUrl(mosque);
+  const donateBtn = m.donate_url
+    ? `<a href="${m.donate_url}" target="_blank" rel="noopener" class="pc-btn pc-btn-donate">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>Donasi</a>`
+    : `<span class="pc-btn pc-btn-donate pc-btn-donate-dis">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>Donasi</span>`;
 
   return `
-    <div class="popup-card">
-      <div class="popup-img-wrap">
-        ${buildPhotoMarkup(mosque)}
-        ${badgeHTML}
+  <div class="popup-card">
+    <div class="pc-img">
+      ${photoMarkup(m, 'pc-img-ph')}
+      <span class="pc-badge ${hasJ ? 'yes' : 'no'}">${hasJ ? '✅ Jumat Berkah' : '🚫 Tidak Ada'}</span>
+    </div>
+    <div class="pc-body">
+      <h2>${m.name}</h2>
+      <p class="pc-addr">📍 ${m.address}</p>
+      <div class="pc-info">
+        <span class="pc-info-icon">🍱</span>
+        <div class="pc-info-text"><strong>Jumat Berkah</strong>${jumatInfo}</div>
       </div>
-      <div class="popup-body">
-        <h2>${mosque.name}</h2>
-        <p class="popup-addr">📍 ${mosque.address}</p>
-        <div class="info-row">
-          <span class="info-row-icon">🍱</span>
-          <div class="info-row-text">
-            <strong>Jumat Berkah</strong>
-            ${jumatInfoHTML}
-          </div>
-        </div>
-        <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-maps">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="pc-btn-row">
+        <a href="${getMapsUrl(m)}" target="_blank" rel="noopener" class="pc-btn pc-btn-maps">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-          </svg>
-          ${mapsLabel}
+          </svg>${mapsLbl}
         </a>
+        ${donateBtn}
       </div>
-    </div>`;
+    </div>
+  </div>`;
 }
 
-function createMosqueIcon (hasJumat) {
-  const colorClass = hasJumat ? 'has-jumat' : 'no-jumat';
+/* ══════════════════════════════════════════════════
+   MARKERS
+   ══════════════════════════════════════════════════ */
+const markerMap = {};
+
+function createIcon(hasJumat) {
   return L.divIcon({
     className: '',
-    html: `<div class="mosque-marker ${colorClass}"><div class="mosque-marker-inner">🕌</div></div>`,
-    iconSize:   [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor:[0, -44]
+    html: `<div class="mosque-marker ${hasJumat ? 'has-jumat' : 'no-jumat'}">
+             <div class="mosque-marker-inner">🕌</div>
+           </div>`,
+    iconSize: [36,36], iconAnchor: [18,36], popupAnchor: [0,-40]
   });
 }
 
-/* ─── Fix: bindPopup dilakukan saat marker dibuat (bukan di dalam event click).
-         Ini menghindari race condition Leaflet di mana memanggil bindPopup()
-         di dalam handler 'click' mengacaukan state internal toggle popup
-         pada klik kedua dan seterusnya.
-         Content HTML tetap di-build sekali saja (lazy) via 'popupopen' event. ─── */
-MOSQUE_DATA.forEach(mosque => {
-  const marker = L.marker([mosque.lat, mosque.lng], { icon: createMosqueIcon(mosque.jumat_berkah) }).addTo(map);
+MOSQUE_DATA.forEach(m => {
+  const marker = L.marker([m.lat, m.lng], { icon: createIcon(m.jumat_berkah) }).addTo(map);
+  markerMap[m.id] = marker;
 
-  /* Tooltip hover — nama masjid + status jumat berkah */
-  const tooltipJumat = mosque.jumat_berkah
-    ? `<span class="tooltip-jumat-yes">✅ Ada Jumat Berkah</span>`
-    : `<span class="tooltip-jumat-no">🚫 Tidak Ada Jumat Berkah</span>`;
-
+  // Tooltip on hover
   marker.bindTooltip(
-    `<span class="tooltip-name">${mosque.name}</span>${tooltipJumat}`,
-    {
-      direction:  'top',
-      offset:     [0, -44],
-      opacity:    1,
-      className:  'mosque-tooltip',
-      permanent:  false
-    }
+    `<span class="tt-name">${m.name}</span>
+     <span class="${m.jumat_berkah ? 'tt-yes' : 'tt-no'}">${m.jumat_berkah ? '✅ Ada Jumat Berkah' : '🚫 Tidak Ada Jumat Berkah'}</span>`,
+    { direction: 'top', offset: [0,-40], opacity: 1, className: 'mosque-tooltip', permanent: false }
   );
 
-  /* Bind popup dengan content kosong dulu — agar Leaflet tahu marker ini punya popup */
-  marker.bindPopup('', {
-    maxWidth: 360,
-    closeButton: true,
-    className: 'mosque-popup'
+  // Popup — pre-bind, lazy content
+  marker.bindPopup('', { maxWidth: 275, closeButton: true, className: 'mosque-popup' });
+  marker.on('popupopen', function() {
+    const p = this.getPopup();
+    if (!p._built) { p.setContent(buildPopupHTML(m)); p._built = true; }
+    setActiveCard(m.id);
   });
-
-  /* Isi content HTML hanya sekali, saat popup pertama kali akan dibuka */
-  marker.on('popupopen', function () {
-    const popup = this.getPopup();
-    if (!popup._contentBuilt) {
-      popup.setContent(buildPopupHTML(mosque));
-      popup._contentBuilt = true;
-    }
-  });
+  marker.on('popupclose', clearActiveCard);
 });
 
-/* ══════════════════════════════════════════════
-   UI UPDATES
-   ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   SIDEBAR CARD
+   ══════════════════════════════════════════════════ */
+function buildCard(m) {
+  const hasJ   = m.jumat_berkah;
+  const mapsLbl = platform === 'ios' ? 'Apple Maps' : 'Google Maps';
+  return `
+  <div class="mosque-card" id="card-${m.id}" onclick="focusMarker('${m.id}')">
+    <div class="mc-img">
+      ${m.photo_url
+        ? `<img src="${m.photo_url}" alt="${m.name}" loading="lazy"
+               onerror="this.parentElement.innerHTML='<div class=\\'mc-ph\\'><span>🕌</span><small>Foto tidak tersedia</small></div>'" />`
+        : `<div class="mc-ph"><span>🕌</span><small>Foto belum tersedia</small></div>`}
+      <span class="mc-tag ${hasJ ? 'yes' : 'no'}">${hasJ ? '✅ Jumat Berkah' : '🚫 Tidak Ada'}</span>
+    </div>
+    <div class="mc-body">
+      <div class="mc-name">${m.name}</div>
+      <div class="mc-addr">📍 ${m.address}</div>
+      <div class="mc-btn-row">
+        <a href="${getMapsUrl(m)}" target="_blank" rel="noopener" class="mc-btn mc-btn-loc"
+           onclick="event.stopPropagation()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>${mapsLbl}
+        </a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderList(data) {
+  const list = document.getElementById('mosque-list');
+  const cnt  = document.getElementById('search-count');
+  if (!data.length) {
+    list.innerHTML = `<div class="no-results"><span>🔍</span>Masjid tidak ditemukan</div>`;
+    cnt.textContent = '';
+    return;
+  }
+  list.innerHTML = data.map(buildCard).join('');
+  cnt.textContent = `${data.length} masjid ditemukan`;
+}
+
+function focusMarker(id) {
+  const marker = markerMap[id];
+  if (!marker) return;
+  map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 15), { duration: .8 });
+  setTimeout(() => marker.openPopup(), 860);
+}
+
+function setActiveCard(id) {
+  document.querySelectorAll('.mosque-card').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('card-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+function clearActiveCard() {
+  document.querySelectorAll('.mosque-card').forEach(c => c.classList.remove('active'));
+}
+
+/* ══════════════════════════════════════════════════
+   SEARCH
+   ══════════════════════════════════════════════════ */
+function filterMosques(q) {
+  const term = q.toLowerCase().trim();
+  renderList(term ? MOSQUE_DATA.filter(m => m.name.toLowerCase().includes(term)) : MOSQUE_DATA);
+}
+
+/* ══════════════════════════════════════════════════
+   GEOLOCATION
+   ══════════════════════════════════════════════════ */
+let userMarker = null;
+
+function locateUser() {
+  if (!navigator.geolocation) { showToast('📍 Browser tidak mendukung geolocation'); return; }
+  const btn = document.getElementById('btn-geo');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Mencari…';
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Lokasi Saya';
+      const { latitude: lat, longitude: lng } = pos.coords;
+
+      if (userMarker) map.removeLayer(userMarker);
+
+      userMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="
+            width:16px;height:16px;border-radius:50%;
+            background:radial-gradient(circle,#4af,#06c);
+            border:3px solid #fff;
+            box-shadow:0 0 0 5px rgba(0,120,255,.2),0 2px 8px rgba(0,0,0,.3)
+          "></div>`,
+          iconSize: [16,16], iconAnchor: [8,8]
+        }),
+        zIndexOffset: 1000
+      }).addTo(map);
+
+      userMarker.bindTooltip('📍 Lokasi Anda', {
+        permanent: false, direction: 'top', offset: [0,-10], className: 'mosque-tooltip'
+      });
+
+      map.flyTo([lat, lng], 15, { duration: 1.2 });
+      showToast('📍 Lokasi ditemukan! Peta dipusatkan ke area Anda.');
+    },
+    err => {
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Lokasi Saya';
+      const msg = err.code === 1 ? '🚫 Izin lokasi ditolak. Aktifkan di pengaturan browser.'
+                : err.code === 2 ? '📡 Sinyal lokasi tidak tersedia, coba lagi.'
+                                 : '⏱ Waktu habis, silakan coba lagi.';
+      showToast(msg);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════ */
+renderList(MOSQUE_DATA);
 document.getElementById('count-badge').textContent = `${MOSQUE_DATA.length} Masjid`;
-
-/* Show legend after map ready */
-map.whenReady(() => {
-  const legend = document.getElementById('legend');
-  legend.style.display = 'block';
-  /* Position it over the map container */
-  const mapEl = document.getElementById('map');
-  mapEl.style.position = 'relative';
-  mapEl.appendChild(legend);
-});
 </script>
 </body>
 </html>
