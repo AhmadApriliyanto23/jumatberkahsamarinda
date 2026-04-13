@@ -1,0 +1,43 @@
+{
+    "masjid": [
+        {
+            "id": "masjid_001",
+            "name": "Masjid Baitul Muttaqien – Islamic Center Kaltim",
+            "address": "Jl. Slamet Riyadi No.1, Mugirejo, Kec. Sungai Pinang, Kota Samarinda, Kalimantan Timur 75129",
+            "lat": -0.5023346556441342,
+            "lng": 117.12009252622154,
+            "jumat_berkah": true,
+            "jumat_berkah_time": "11:30 – habis salat Jumat",
+            "jumat_berkah_note": "Nasi kotak & lauk gratis untuk jamaah dan masyarakat sekitar",
+            "photo_url": "https://static.republika.co.id/uploads/images/inpicture_slide/masjid-islamic-centre-samarinda-kalimantan-timur-_140403101217-857.jpg",
+            "gmaps_url": "https://maps.google.com/?q=-0.5023346556441342,117.12009252622154",
+            "apple_maps_url": "https://maps.apple.com/?ll=-0.5023346556441342,117.12009252622154&q=Masjid+Baitul+Muttaqien+-+Islamic+Center+Kaltim"
+        },
+        {
+            "id": "masjid_002",
+            "name": "Masjid Raya Darussalam",
+            "address": "Jl. Pramuka No.17, Sidodadi, Kec. Samarinda Ulu, Kota Samarinda, Kalimantan Timur 75122",
+            "lat": -0.5032466442299814,
+            "lng": 117.14746652195846,
+            "jumat_berkah": false,
+            "jumat_berkah_time": null,
+            "jumat_berkah_note": "Saat ini belum menyelenggarakan program Jumat Berkah",
+            "photo_url": "",
+            "gmaps_url": "https://maps.google.com/?q=-0.5032466442299814,117.14746652195846",
+            "apple_maps_url": "https://maps.apple.com/?ll=-0.5032466442299814,117.14746652195846&q=Masjid+Raya+Darussalam+Samarinda"
+        },
+        {
+            "id": "masjid_003",
+            "name": "Masjid Baburrahmah",
+            "address": "perumahan griya mukti sejatera, Jl. PM. Noor, Sempaja Sel., Kec. Samarinda Utara, Kota Samarinda, Kalimantan Timur 75242",
+            "lat": -0.45215961,
+            "lng": 117.1719176,
+            "jumat_berkah": true,
+            "jumat_berkah_time": "11:30 – habis salat Jumat",
+            "jumat_berkah_note": "Nasi kotak & lauk gratis untuk jamaah dan masyarakat sekitar",
+            "photo_url": "", 
+            "gmaps_url": "https://maps.google.com/?q=-0.45215961,117.1719176",
+            "apple_maps_url": "https://maps.apple.com/?ll=-0.45215961,117.1719176&q=Masjid+Baburrahmah"
+        }
+    ]
+}
