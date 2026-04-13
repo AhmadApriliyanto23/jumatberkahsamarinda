@@ -273,7 +273,7 @@
       cursor:pointer; text-decoration:none; transition:filter .18s, transform .12s;
     }
     .pc-btn-maps { background:linear-gradient(135deg,var(--g-mid),var(--g-deep)); color:#fff !important; }
-    .pc-btn-maps:hover { filter:brightness(1.13); transform:translateY(-1px); }
+    .pc-btn-maps:hover { filter:brightness(1.13); transform:translateY(-1px); color:#fff !important; }
     .pc-btn-donate { background:linear-gradient(135deg,#b5451b,#e07848); color:#fff; }
     .pc-btn-donate:hover { filter:brightness(1.13); transform:translateY(-1px); }
     .pc-btn-donate-dis { background:var(--cream-dk); color:var(--txt-soft); pointer-events:none; }
@@ -459,28 +459,51 @@
     /* ══ RESPONSIVE ══ */
     @media (max-width: 768px) {
       :root { --hdr:48px; --ftr:34px; }
+
+      /*
+       * Root cause bug mobile: #app pakai height:100vh + overflow:hidden di body
+       * membuat footer tercekik dan tidak bisa discroll.
+       * Fix: body boleh scroll secara vertikal, #app mengikuti konten,
+       * map-pane diberi tinggi eksplisit (svh/dvh sadar safe-area iPhone).
+       */
+      html, body {
+        overflow: auto !important;
+        height: auto !important;
+      }
+      #app {
+        height: auto !important;
+        /* stack: header | map | sidebar | footer */
+        grid-template-rows: var(--hdr) auto auto var(--ftr);
+        min-height: 100dvh;   /* dvh sadar safe-area & browser-bar iPhone */
+      }
       #body-grid {
         grid-template-columns: 1fr;
-        grid-template-rows: 58vh 1fr;
-        overflow-y: auto;
-        overflow-x: hidden;
+        grid-template-rows: auto auto;
+        overflow: visible;
       }
-      #map-pane { height: 100%; }
+      #map-pane {
+        height: 55svh;    /* svh = small viewport height → tidak terpotong keyboard/bar */
+        min-height: 260px;
+      }
+      #map { height: 100%; }
+
       #sidebar {
-        height: auto; max-height: none;
+        height: auto;
+        max-height: none;
         border-left: none;
         border-top: 2px solid rgba(201,168,76,.18);
         overflow: visible;
       }
       #mosque-list {
         overflow-y: visible;
-        flex-direction: row; flex-wrap: nowrap;
-        overflow-x: auto; padding:6px 7px;
-        /* allow touch scroll */
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 6px 7px;
         -webkit-overflow-scrolling: touch;
       }
-      .mosque-card { min-width: 155px; max-width:155px; flex-shrink:0; }
-      .map-legend  { display:none; }
+      .mosque-card  { min-width: 148px; max-width: 148px; flex-shrink: 0; }
+      .map-legend   { display: none; }
     }
     @media (max-width: 480px) {
       header { padding:0 9px; gap:7px; }
@@ -630,7 +653,7 @@
         <div class="check-group">
           <div class="check-row fixed-check">
             <input type="checkbox" id="chk-kas" checked disabled />
-            <label for="chk-kas">
+            <label id="lbl-kas" for="chk-kas">
               Rp 1.000 untuk Kas Masjid
               <small>Otomatis disertakan dalam setiap donasi</small>
             </label>
@@ -781,12 +804,17 @@ function buildPopupHTML(m) {
     ? `<span class="st-yes">✅ Ada – ${m.jumat_berkah_time || 'Setelah salat Jumat'}</span><br><small>${m.jumat_berkah_note}</small>`
     : `<span class="st-no">🚫 Tidak Ada</span><br><small>${m.jumat_berkah_note}</small>`;
   const mapsLbl = platform === 'ios' ? 'Apple Maps' : 'Google Maps';
-  const donatePart = `
-    <button onclick="openDonateModal('${m.id}')" class="pc-btn pc-btn-donate">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-      </svg>Donasi
-    </button>`;
+  /* Fix 3: Tombol donasi hanya muncul untuk masjid yang ada Jumat Berkah.
+     Alasan UX: donasi terhubung langsung dengan program makanan Jumat Berkah.
+     Jika masjid tidak menyelenggarakan, tombol disembunyikan total (bukan disabled)
+     agar user tidak bingung — layout tetap rapi dengan tombol maps melebar penuh. */
+  const donatePart = hasJ
+    ? `<button onclick="openDonateModal('${m.id}')" class="pc-btn pc-btn-donate">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>Donasi
+      </button>`
+    : '';
 
   return `
   <div class="popup-card">
@@ -967,7 +995,14 @@ let _activeMosqueId = null;
 function openDonateModal(mosqueId) {
   _activeMosqueId = mosqueId;
   const m = MOSQUE_DATA.find(x => x.id === mosqueId);
-  document.getElementById('modal-mosque-name').textContent = m ? m.name : '—';
+  const mName = m ? m.name : '—';
+  document.getElementById('modal-mosque-name').textContent = mName;
+
+  /* Fix 4: Tampilkan nama masjid pada label kas */
+  const kasLabel = document.getElementById('lbl-kas');
+  if (kasLabel) kasLabel.innerHTML =
+    `Rp 1.000 untuk Kas Masjid <em style="color:var(--g-mid);font-style:normal;font-weight:600;">${mName}</em>
+     <small>Otomatis disertakan dalam setiap donasi</small>`;
   // Reset form
   document.getElementById('don-nominal').value = '';
   document.getElementById('don-name').value    = '';
